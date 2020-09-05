@@ -28,6 +28,8 @@ def get_data(file):
     :return:
     """
     df = pd.read_csv(file)
+
+    df = df[['date', 'ljjz']]
     df.columns = ['date', 'close']
     df['pred'] = df['close'].shift(-1)
     df = df.iloc[: -1]
@@ -66,14 +68,13 @@ def preprocess(train_data, valid_data, test_data):
     return train_x, train_y, valid_x, valid_y, test_x, test_y
 
 
-def plot_info(train, test, title, ylabel, pic_path=None):
+def plot_info(train, test, title, ylabel):
     """
     训练 & 测试
     :param train:
     :param test:
     :param title:
     :param ylabel:
-    :param pic_path:
     :return:
     """
     plt.clf()
@@ -155,7 +156,7 @@ def build_fit_model(train_x, train_y, valid_x, valid_y, test_x, test_y,
 
 def grid_search(train_x, train_y, valid_x, valid_y, test_x, test_y,
                 epochs, batch_size, units_arr, activate_arr, opt_arr, loss,
-                reg_arr):
+                reg_arr, workers):
     """
     对参数进行暴力搜素
     :param train_x:
@@ -171,6 +172,7 @@ def grid_search(train_x, train_y, valid_x, valid_y, test_x, test_y,
     :param opt_arr:
     :param loss:
     :param reg_arr:
+    :param workers:
     :return:
     """
     loss_value = 100000
@@ -183,6 +185,7 @@ def grid_search(train_x, train_y, valid_x, valid_y, test_x, test_y,
         for opt in opt_arr:
             for act in activate_arr:
                 for reg in reg_arr:
+                    print('-' * 10)
                     model, loss_metrics = \
                         build_fit_model(train_x, train_y,
                                         valid_x, valid_y,
@@ -194,7 +197,8 @@ def grid_search(train_x, train_y, valid_x, valid_y, test_x, test_y,
                                         epochs=epochs,
                                         l2_ratio=reg,
                                         batch_size=batch_size,
-                                        verbose=0)
+                                        verbose=0,
+                                        workers=workers)
                     if loss_metrics < loss_value:
                         loss_value = loss_metrics
                         target_unit = unit
@@ -258,7 +262,7 @@ def run():
     """
     valid_size = 23
     test_size = 23
-    file = './data/hs300.csv'
+    file = './data/001632.csv'
 
     epochs = 100
     batch_size = 200
@@ -279,7 +283,7 @@ def run():
                    test_data=test_data)
 
     # super parameter grid search
-    # units_arr = [64, 128, 256, 512, 1024]
+    units_arr = [64, 128, 256, 512, 1024]
     units_arr = [448, 512, 576]
     reg_arr = [0, 0.001, 0.01, 0.1, 0.3]
     activate_arr = ['linear', 'softsign']
@@ -296,9 +300,10 @@ def run():
             grid_search(train_x, train_y, valid_x, valid_y, test_x, test_y,
                         epochs, batch_size,
                         units_arr, activate_arr=['softsign'],
-                        opt_arr=['RMSprop'],
-                        loss=loss,
-                        reg_arr=reg_arr)
+                        opt_arr=['adam'],
+                        loss=['mse'],
+                        reg_arr=reg_arr,
+                        workers=8)
 
     # 用best parameter build model
     if build_flag:

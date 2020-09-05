@@ -1,3 +1,7 @@
+"""
+基金收益排行
+http://fund.eastmoney.com
+"""
 import requests
 
 
@@ -7,9 +11,27 @@ def get_url(type, period, top_num=10):
     :param type:
     :return:
     """
-    url = 'https://fundapi.eastmoney.com/fundtradenew.aspx?ft={}&sc={}&st=desc&pi=1&pn={}&cp=&ct=&cd=&ms=&fr=&plevel=&fst=&ftype=&fr1=&fl=0&isab=1'.format(type, period, top_num)
+    url = 'https://fundapi.eastmoney.com/fundtradenew.aspx'
+    parameter = {
+        'ft': type,
+        'sc': period,
+        'st': 'desc',
+        'pi': 1,
+        'pn': top_num,
+        'cp': '',
+        'ct': '',
+        'cd': '',
+        'ms': '',
+        'fr': '',
+        'plevel': '',
+        'fst': '',
+        'ftype': '',
+        'fr1': '',
+        'fl': 0,
+        'isab': 1
+    }
 
-    req = requests.get(url)
+    req = requests.get(url, params=parameter)
     if req.status_code == 200:
         return req.text
 
@@ -30,6 +52,8 @@ def get_type_info(type, peroid_list, top_num=10):
     """
 
     :param type:
+    :param peroid_list:
+    :param top_num:
     :return:
     """
     code = set()
@@ -49,7 +73,7 @@ def run():
     """
     type_list = ['gp', 'zs', 'qdii', 'hh']
     peroid_list = ['y', '3y', '6y', '1n']
-    code = get_type_info(type='qdii', peroid_list=peroid_list, top_num=20)
+    code = get_type_info(type='zs', peroid_list=peroid_list, top_num=20)
 
     print(code)
 
